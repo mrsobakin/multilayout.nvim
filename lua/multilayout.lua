@@ -1,53 +1,49 @@
-local utils = require("multilayout.utils")
-local ALL_COMMANDS = require("multilayout.allcommands").ALL_COMMANDS
+local aliases = require("multilayout.aliases")
+local langmap = require("multilayout.langmap")
+
+
+local function config_with_defaults(config)
+    local default_config = {
+        aliases = {
+            max_length = 2,
+            extra = { "sort" },
+        },
+        use_libukb = false,
+        callback = nil,
+    }
+
+    for k, v in pairs(config) do
+        default_config[k] = v
+    end
+
+    return default_config
+end
+
 
 local M = {}
 
-local en = [[`qwertyuiop[]asdfghjkl;'zxcvbnm~QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>]]
-local ru = [[ёйцукенгшщзхъфывапролджэячсмитьËЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ]]
 
+M.setup = function(config)
+    config = config_with_defaults(config)
 
-local translate = {}
-
-for orig, alias in utils.zip(utils.values(utils.split_multibyte(en)), utils.values(utils.split_multibyte(ru))) do
-    translate[orig] = alias
-end
-
-function translatestring(str)
-    local newstr = ""
-    for char in utils.values(utils.split_multibyte(str)) do
-        if translate[char] then
-            newstr = newstr .. translate[char]
-        else
-            newstr = newstr .. char
-        end
+    -- Compute additional fields for config
+    if not langmap.prepare_config(config) then
+        return
     end
-    return newstr
-end
 
-function translatechar(char)
-    if translate[char] then
-        return translate[char]
-    else
-        return char
+    local from, to = nil, nil
+    for _, layout in pairs(config.layouts) do
+        from, to = layout.from, layout.to
     end
+
+    aliases.setup(from, to, config.aliases.max_length, config.aliases.extra)
+    langmap.setup(config)
 end
 
-M.setup = function(opts)
-    for cmd in utils.values(ALL_COMMANDS) do
-        local start, opt = cmd[1], cmd[2]
 
-        local fullorig = start
-        local fullalias = translatestring(fullorig)
-
-        utils.abbrev_alias(fullalias, fullorig)
-
-        for char in utils.values(utils.split_multibyte(opt)) do
-            fullorig = fullorig .. char
-            fullalias = fullalias .. translatechar(char)
-            utils.abbrev_alias(fullalias, fullorig)
-        end
-    end
+M.get_current_layout = function()
+    return langmap.get_current_layout()
 end
+
 
 return M
