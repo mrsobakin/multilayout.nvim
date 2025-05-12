@@ -1,6 +1,9 @@
 local utils = require("multilayout.utils")
 
 
+local LIBUKB_VERSION = "v0.0.1"
+
+
 local set_langmap = vim.schedule_wrap(function(langmap)
     vim.opt.langmap = langmap
 end)
@@ -115,6 +118,43 @@ end
 
 
 local M = {}
+
+
+M.install_ukb = function()
+    local data = vim.fn.stdpath("data") .. "/ukb"
+    local ukbdir = data .. "/" .. LIBUKB_VERSION
+    local libukb = ukbdir .. "/libukb.so"
+
+    if vim.uv.fs_stat(libukb) then
+        return libukb
+    end
+
+    -- Remove old versions if they exist
+    pcall(vim.fs.rm, data, { recursive = true })
+
+    utils.notify("No libukb found. Installing...", vim.log.levels.WARN)
+
+    vim.system({
+        "git",
+        "clone",
+        "--filter=blob:none",
+        "https://github.com/mrsobakin/ukb",
+        "--branch=" .. LIBUKB_VERSION,
+        ukbdir,
+    }):wait()
+
+    utils.notify("Building libukb...", vim.log.levels.WARN)
+
+    local result = vim.system({ "make" }, { cwd = ukbdir }):wait()
+
+    if result.code ~= 0 then
+        utils.notify("Something went wrong. Here's the `make` result:", vim.log.levels.ERROR)
+        print(vim.inspect(result))
+        return nil
+    end
+
+    return libukb
+end
 
 
 M.run = function(libukb_path, layouts, default_langmap, callback)

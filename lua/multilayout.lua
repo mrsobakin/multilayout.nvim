@@ -9,6 +9,7 @@ local function config_with_defaults(config)
             extra = { "sort" },
         },
         use_libukb = false,
+        libukb_path = nil,
         callback = nil,
     }
 

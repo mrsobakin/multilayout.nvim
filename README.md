@@ -34,7 +34,9 @@ require("lazy").setup({{ "mrsobakin/multilayout.nvim", opts = {
         -- Whether to use `libukb`. If this is set to false, `langmap`
         -- won't automatically switch when your layout does.
         use_libukb = false,
-        libukb_path = "/usr/local/lib/libukb.so",
+        -- Path to the `libukb.so`. If `nil`, ukb will be automatically
+        -- downloaded, builded and installed in the neovim data directory.
+        libukb_path = nil,
         -- Function of type `callback(layout: string)`. Called whenever
         -- current keyboard layout changes.
         callback = nil,
@@ -42,7 +44,9 @@ require("lazy").setup({{ "mrsobakin/multilayout.nvim", opts = {
 }})
 ```
 
-If you want to use all **multilayout.nvim** features, you'll have to [install **ukb**](https://github.com/mrsobakin/ukb) and enable it.
+If you want to use all **multilayout.nvim** features, you should enable `use_libukb`. To install it automatically, you must have `git`, `gcc` and `make` present on your system.
+
+Currently, ukb suports only a small subset of platforms. You can see a full list of supported platforms [here](https://github.com/mrsobakin/ukb).
 
 ## 💡 FAQ
 

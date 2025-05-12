@@ -83,6 +83,14 @@ end
 
 
 M.setup = function(config)
+    if config.use_libukb and (config.libukb_path == nil) then
+        config.libukb_path = libukb.install_ukb()
+
+        if config.libukb_path == nil then
+            config.use_libukb = false
+        end
+    end
+
     vim.opt.langmap = config.default_langmap
 
     if not config.use_libukb then
