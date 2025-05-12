@@ -1,7 +1,7 @@
 local utils = require("multilayout.utils")
 
 
-local LIBUKB_VERSION = "v0.0.1"
+local LIBUKB_VERSION = "v0.1.0"
 
 
 local set_langmap = vim.schedule_wrap(function(langmap)
