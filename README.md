@@ -35,6 +35,9 @@ require("lazy").setup({{ "mrsobakin/multilayout.nvim", opts = {
         -- won't automatically switch when your layout does.
         use_libukb = false,
         libukb_path = "/usr/local/lib/libukb.so",
+        -- Function of type `callback(layout: string)`. Called whenever
+        -- current keyboard layout changes.
+        callback = nil,
     }
 }})
 ```
