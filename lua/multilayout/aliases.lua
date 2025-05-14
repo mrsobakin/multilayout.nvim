@@ -1,4 +1,4 @@
-local all_commands = require("multilayout.all_commands")
+local commands = require("multilayout.static.commands")
 local utils = require("multilayout.utils")
 
 
@@ -47,7 +47,7 @@ M.setup = function(from, to, max_len, extras)
         end
     end
 
-    for cmd in utils.values(all_commands) do
+    for cmd in utils.values(commands) do
         local start, opt = cmd[1], cmd[2]
         local len = #start
 
