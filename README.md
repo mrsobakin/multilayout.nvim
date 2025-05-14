@@ -13,35 +13,50 @@ You won't need to think about switching layouts anymore: for example, if you wri
 Add the plugin using your preferred manager:
 
 ```lua
--- Using lazy.nvim
+-- Minimal configuration for russian layout using lazy.nvim
 require("lazy").setup({{ "mrsobakin/multilayout.nvim", opts = {
-        layouts = {
-            ru = {
-                -- Names of this layout, as `libukb` reports.
-                names = { "Russian" },
-                from  = [[ёйцукенгшщзхъфывапролджэячсмитьбю.Ё"№;:?ЙЦУКЕНГШЩЗХЪ/ФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,]],
-                to    = [[`qwertyuiop[]asdfghjkl;'zxcvbnm,./~@#$^&QWERTYUIOP{}|ASDFGHJKL:"ZXCVBNM<>?]],
-            }
-        },
-        aliases = {
-            -- Maximum length of default commands aliases.
-            -- Increasing this value leads to longer startup times.
-            max_length = 2,
-            -- Extra commands that you want to alias.
-            -- They are aliased regardless of `max_length`.
-            extra = { "sort" },
-        },
-        -- Whether to use `libukb`. If this is set to false, `langmap`
-        -- won't automatically switch when your layout does.
-        use_libukb = false,
-        -- Path to the `libukb.so`. If `nil`, ukb will be automatically
-        -- downloaded, builded and installed in the neovim data directory.
-        libukb_path = nil,
-        -- Function of type `callback(layout: string)`. Called whenever
-        -- current keyboard layout changes.
-        callback = nil,
-    }
-}})
+    layouts = {
+        ru = "ru",
+    },
+    -- Enable if you want to have full multilayout.nvim functionality.
+    use_libukb = false,
+}}})
+```
+
+Default config and options description:
+
+```lua
+local config = {
+    -- (unset by default)
+    layouts = {
+        -- Either table or string layout preset name (`ru`).
+        ru = {
+            -- Names of this layout, as `libukb` reports.
+            names = { "Russian" },
+            -- Character conversion table.
+            -- You may specify only the differing characters.
+            from  = [[ёйцукенгшщзхъфывапролджэячсмитьбю.Ё"№;:?ЙЦУКЕНГШЩЗХЪ/ФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,]],
+            to    = [[`qwertyuiop[]asdfghjkl;'zxcvbnm,./~@#$^&QWERTYUIOP{}|ASDFGHJKL:"ZXCVBNM<>?]],
+        }
+    },
+    aliases = {
+        -- Maximal length of default commands aliases.
+        -- Increasing this value can lead to longer startup times.
+        max_length = 2,
+        -- Extra commands that you want to alias.
+        -- They are aliased regardless of `max_length`.
+        extra = { "sort" },
+    },
+    -- Whether to use `libukb`. If this is set to false, `langmap`
+    -- won't automatically switch when your layout does.
+    use_libukb = false,
+    -- Path to the `libukb.so`. If `nil`, ukb will be automatically
+    -- downloaded, builded and installed in the neovim data directory.
+    libukb_path = nil,
+    -- Function of type `callback(layout: string)`. Called whenever
+    -- current keyboard layout changes.
+    callback = nil,
+}
 ```
 
 If you want to use all **multilayout.nvim** features, you should enable `use_libukb`. To install it automatically, you must have `git`, `gcc` and `make` present on your system.
