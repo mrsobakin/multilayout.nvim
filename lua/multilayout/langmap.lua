@@ -1,16 +1,17 @@
 local utils = require("multilayout.utils")
-local libukb = require("multilayout.libukb")
-local layouts_presets = require("multilayout.static.layouts")
 
 
-local function langmap_escape(str)
+local M = {}
+
+
+M.escape = function(str)
     local escape_chars = [[;,."|\]]
     return vim.fn.escape(str, escape_chars)
 end
 
 
-local function make_langmap(from, to)
-    return langmap_escape(from) .. ';' .. langmap_escape(to)
+M.make = function(from, to)
+    return M.escape(from) .. ';' .. M.escape(to)
 end
 
 
@@ -18,7 +19,7 @@ end
 -- translates keys even if the current keyboard layout is not known.
 --
 -- I.e, translation function domain and codomain do not intersect.
-local function make_unique_keymap(from, to)
+M.make_unique_map = function(from, to)
     local counter = {}
 
     from = utils.split_multibyte(from)
@@ -49,73 +50,8 @@ local function make_unique_keymap(from, to)
 end
 
 
-local M = {}
-
-
-M.prepare_config = function(config)
-    local n_layouts = 0
-
-    if config.layouts then
-        for _ in pairs(config.layouts) do n_layouts = n_layouts + 1 end
-    end
-
-    if n_layouts == 0 then
-        utils.notify("No layouts are provided.", vim.log.levels.ERROR)
-        return false
-    end
-
-    if n_layouts > 1 then
-        utils.notify("Currently, maximum supported number of layouts is 1", vim.log.levels.ERROR)
-        return false
-    end
-
-    local default_langmap = nil
-
-    for id, layout in pairs(config.layouts) do
-        if type(layout) == "string" then
-            local layout_preset = layouts_presets[layout]
-
-            if layout_preset == nil then
-                utils.notify("Unknown layout preset: " .. layout, vim.log.levels.ERROR)
-                return false
-            end
-
-            layout = layout_preset
-            config.layouts[id] = layout_preset
-        end
-
-        -- TODO: for multiple layouts, default_langmap should be calculated diffrerently!!!
-        default_langmap = make_langmap(unpack(make_unique_keymap(layout.from, layout.to)))
-        layout.langmap = make_langmap(layout.from, layout.to)
-    end
-
-    config.default_langmap = default_langmap
-
-    return true
-end
-
-
-M.setup = function(config)
-    if config.use_libukb and (config.libukb_path == nil) then
-        config.libukb_path = libukb.install_ukb()
-
-        if config.libukb_path == nil then
-            config.use_libukb = false
-        end
-    end
-
-    vim.opt.langmap = config.default_langmap
-
-    if not config.use_libukb then
-        return
-    end
-
-    libukb.run(config.libukb_path, config.layouts, config.default_langmap, config.callback)
-end
-
-
-M.get_current_layout = function()
-    libukb.get_current_layout()
+M.make_unique = function(from, to)
+    return M.make(unpack(M.make_unique_map(from, to)))
 end
 
 
