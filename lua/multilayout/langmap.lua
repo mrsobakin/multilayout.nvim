@@ -1,5 +1,6 @@
 local utils = require("multilayout.utils")
 local libukb = require("multilayout.libukb")
+local layouts_presets = require("multilayout.static.layouts")
 
 
 local function langmap_escape(str)
@@ -70,7 +71,19 @@ M.prepare_config = function(config)
 
     local default_langmap = nil
 
-    for _, layout in pairs(config.layouts) do
+    for id, layout in pairs(config.layouts) do
+        if type(layout) == "string" then
+            local layout_preset = layouts_presets[layout]
+
+            if layout_preset == nil then
+                utils.notify("Unknown layout preset: " .. layout, vim.log.levels.ERROR)
+                return false
+            end
+
+            layout = layout_preset
+            config.layouts[id] = layout_preset
+        end
+
         -- TODO: for multiple layouts, default_langmap should be calculated diffrerently!!!
         default_langmap = make_langmap(unpack(make_unique_keymap(layout.from, layout.to)))
         layout.langmap = make_langmap(layout.from, layout.to)
