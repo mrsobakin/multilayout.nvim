@@ -59,7 +59,7 @@ local config = {
 }
 ```
 
-If you want to use all **multilayout.nvim** features, you should enable `use_libukb`. To install it automatically, you must have `wget` and `tar` present on your system.
+If you want to use all **multilayout.nvim** features, you should enable `use_libukb`. It will be installed automatically (requires `wget` and `tar` on Linux and `powershell` on Windows).
 
 Currently, ukb suports only a small subset of platforms. You can see a full list of supported platforms [here](https://github.com/mrsobakin/ukb).
 
