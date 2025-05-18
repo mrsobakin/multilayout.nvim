@@ -80,6 +80,14 @@ M.setup = function(config)
         return
     end
 
+    -- Check for ffi
+    if ctx.use_libukb then
+        if not libukb.check_ffi() then
+            ctx.use_libukb = false
+            utils.notify("LuaJIT or FFI not found", vim.log.levels.ERROR)
+        end
+    end
+
     -- Auto-install ukb
     if ctx.use_libukb and (ctx.libukb_path == nil) then
         ctx.libukb_path = libukb.install_ukb()

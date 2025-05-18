@@ -50,8 +50,8 @@ local config = {
     -- Whether to use `libukb`. If this is set to false, `langmap`
     -- won't automatically switch when your layout does.
     use_libukb = false,
-    -- Path to the `libukb.so`. If `nil`, ukb will be automatically
-    -- downloaded, builded and installed in the neovim data directory.
+    -- Path to the `libukb.so` or `libukb.dll`. If `nil`, prebuilt library
+    -- will be automatically downloaded and placed in the Neovim data directory.
     libukb_path = nil,
     -- Function of type `callback(layout: string)`. Called whenever
     -- current keyboard layout changes.
@@ -59,7 +59,7 @@ local config = {
 }
 ```
 
-If you want to use all **multilayout.nvim** features, you should enable `use_libukb`. To install it automatically, you must have `git`, `gcc` and `make` present on your system.
+If you want to use all **multilayout.nvim** features, you should enable `use_libukb`. To install it automatically, you must have `wget` and `tar` present on your system.
 
 Currently, ukb suports only a small subset of platforms. You can see a full list of supported platforms [here](https://github.com/mrsobakin/ukb).
 

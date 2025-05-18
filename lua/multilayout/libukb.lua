@@ -1,7 +1,8 @@
 local utils = require("multilayout.utils")
 
 
-local LIBUKB_VERSION = "v0.1.0"
+local UKB_REPO = "https://github.com/mrsobakin/ukb"
+local UKB_VERSION = "v0.2.1"
 
 
 local set_langmap = vim.schedule_wrap(function(langmap)
@@ -116,40 +117,120 @@ local function run_control_task(control_rx_fd)
 end
 
 
+local function get_platform_info()
+    local system = jit.os:lower()
+    local arch = jit.arch
+
+    if arch == "x64" then
+        arch = "x86_64"
+    end
+
+    local name = system .. "-" .. arch
+
+    return {
+        name = name,
+        system = system,
+        arch = arch,
+        suffix = ({
+            linux   = ".so",
+            windows = ".dll",
+        })[system],
+        supported = ({
+            ["windows-x86_64"] = true,
+            ["linux-x86_64"]   = true,
+        })[name] or false,
+    }
+end
+
+
+local function try_run(step, cmd)
+    local res = vim.system(cmd):wait()
+    if res.code ~= 0 then
+        error(step .. " failed: " .. (res.stderr or "unknown error"))
+    end
+end
+
 
 local M = {}
 
 
-M.install_ukb = function()
-    local data = vim.fn.stdpath("data") .. "/ukb"
-    local ukbdir = data .. "/" .. LIBUKB_VERSION
-    local libukb = ukbdir .. "/libukb.so"
+M.check_ffi = function()
+    return (jit ~= nil) and pcall(require, "ffi")
+end
 
+
+M.install_ukb = function()
+    local info = get_platform_info()
+
+    if not info.supported then
+        utils.notify("ukb is not supported on your platform (" .. info.name .. ")", vim.log.levels.ERROR)
+        return nil
+    end
+
+    local data = vim.fn.stdpath("data") .. "/ukb"
+    local libukb = data .. "/libukb-" .. UKB_VERSION .. "-" .. info.name .. info.suffix
+
+    -- If ukb is present and is up to date, return it.
     if vim.uv.fs_stat(libukb) then
         return libukb
     end
 
+    utils.notify("ukb not found. Installing...", vim.log.levels.WARN)
+
     -- Remove old versions if they exist
     pcall(vim.fs.rm, data, { recursive = true })
+    vim.uv.fs_mkdir(data, tonumber('755', 8))
 
-    utils.notify("No libukb found. Installing...", vim.log.levels.WARN)
+    local artifact_suffix = (info.system == "windows") and ".zip" or ".tar.gz"
+    local artifact_name = "ukb-" .. UKB_VERSION .. "-" .. info.name .. artifact_suffix
+    local artifact_url = UKB_REPO .. "/releases/download/" .. UKB_VERSION .. "/" .. artifact_name
 
-    vim.system({
-        "git",
-        "clone",
-        "--filter=blob:none",
-        "https://github.com/mrsobakin/ukb",
-        "--branch=" .. LIBUKB_VERSION,
-        ukbdir,
-    }):wait()
+    local tempdir = vim.uv.fs_mkdtemp(data .. "/tmp.XXXXXX")
+    local ukb_archive = tempdir .. "/ukb" .. artifact_suffix
 
-    utils.notify("Building libukb...", vim.log.levels.WARN)
+    local ok, logs = pcall(function()
+        if info.system == "windows" then
+            try_run("Download", {
+                "powershell", "-c", "Invoke-WebRequest",
+                "-Uri", artifact_url,
+                "-OutFile", ukb_archive
+            })
 
-    local result = vim.system({ "make" }, { cwd = ukbdir }):wait()
+            try_run("Extraction", {
+                "powershell", "-c", "Expand-Archive",
+                "-LiteralPath", ukb_archive,
+                "-DestinationPath", tempdir,
+            })
 
-    if result.code ~= 0 then
-        utils.notify("Something went wrong. Here's the `make` result:", vim.log.levels.ERROR)
-        print(vim.inspect(result))
+            try_run("Rename", {
+                "powershell", "-c", "move",
+                tempdir .. "/lib/libukb" .. info.suffix,
+                libukb
+            })
+        else
+            try_run("Download", {
+                "wget", artifact_url,
+                "-O", ukb_archive,
+            })
+
+            try_run("Extraction", {
+                "tar", "xf", ukb_archive,
+                "-C", tempdir,
+                "lib/libukb" .. info.suffix,
+            })
+
+            try_run("Rename", {
+                "mv",
+                tempdir .. "/lib/libukb" .. info.suffix,
+                libukb
+            })
+        end
+    end)
+
+    pcall(vim.fs.rm, tempdir, { recursive = true })
+
+    if not ok then
+        utils.notify("ukb was not installed. Logs:\n" .. logs, vim.log.levels.ERROR)
         return nil
     end
 
